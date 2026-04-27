@@ -1,3 +1,14 @@
+// React entry point — the first JS that runs in the browser.
+//
+// Order of wrappers matters:
+//   StrictMode  — turns on dev-only checks for unsafe lifecycle patterns
+//   BrowserRouter — provides URL-based routing context
+//   AuthProvider  — provides the "current user" context
+//   App           — the actual route table and pages
+//
+// Each provider that comes later can use the context from the providers
+// before it.
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";

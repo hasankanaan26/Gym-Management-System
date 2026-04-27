@@ -1,3 +1,13 @@
+// ManageClasses — manager CRUD for classes.
+//
+// One form serves both Create and Edit: when `editingId` is null we POST,
+// otherwise we PATCH. This is a common React pattern that avoids two
+// nearly-identical forms.
+//
+// Roster expand/collapse is per-class state stored in `roster.open`. A
+// proper modal would be more accessible — accessibility audit is on the
+// contribution list (CONTRIBUTING.md → "Frontend Improvements").
+
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import {

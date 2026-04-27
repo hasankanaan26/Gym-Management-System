@@ -1,3 +1,5 @@
+"""Pydantic schemas for /enrollments."""
+
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -6,6 +8,8 @@ from app.schemas.classes import ClassOut
 
 
 class EnrollmentCreate(BaseModel):
+    # Body for POST /enrollments. The user is taken from the JWT, not the body
+    # — never trust the client to tell you which user is enrolling.
     class_id: int
 
 
@@ -20,6 +24,8 @@ class EnrollmentOut(BaseModel):
 
 
 class MyEnrollmentOut(BaseModel):
+    """Returned by GET /enrollments/me — denormalizes the class details so
+    the member dashboard can render the schedule in one round-trip."""
     id: int
     enrolled_at: datetime
     gym_class: ClassOut

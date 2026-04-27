@@ -1,6 +1,6 @@
 # Gym Management App
 
-A simple, beginner-friendly gym management application.
+A simple, beginner-friendly gym management application — built as a **learning playground** for full-stack engineering.
 
 Two kinds of users:
 
@@ -8,6 +8,10 @@ Two kinds of users:
 - **Gym Goer (Member)** — subscribes, browses classes, enrolls/cancels.
 
 Built with **FastAPI + SQLAlchemy + Postgres** on the backend and **React (Vite) + Tailwind** on the frontend. Everything runs via Docker Compose.
+
+> 📐 **New here?** Read [ARCHITECTURE.md](ARCHITECTURE.md) for a 5-minute tour of how everything fits together.
+>
+> 🛠️ **Want to contribute?** [CONTRIBUTING.md](CONTRIBUTING.md) has an idea board with real-world tools (Keycloak, Seq, Vault, Stripe, OpenTelemetry…) — each one a self-contained learning project.
 
 ## Features
 
@@ -146,12 +150,16 @@ gym-app/
 └── README.md
 ```
 
-## Non-goals
+## Non-goals (= contribution opportunities!)
 
-- No payment processing — "subscribed" is just a flag.
-- No email, notifications, or real-time updates.
-- No tests yet.
-- Two hardcoded roles. (Future: swap to Keycloak.)
+These are missing on purpose — adding any one of them is a great way to learn a real-world tool. See [CONTRIBUTING.md](CONTRIBUTING.md) for the full idea board.
+
+- No payment processing — "subscribed" is just a flag. (→ Stripe)
+- No email, notifications, or real-time updates. (→ Resend / WebSockets)
+- No tests yet. (→ pytest, Vitest, Playwright)
+- Two hardcoded roles. (→ Keycloak)
+- No structured logging or tracing. (→ Seq, OpenTelemetry, Sentry)
+- Secrets via plain env vars. (→ HashiCorp Vault)
 
 ## Development notes
 

@@ -1,15 +1,40 @@
+# docker-compose.yml — orchestrates all the services that make up the app.
+#
+# Three services:
+#   db       — Postgres 16 (the database)
+#   backend  — FastAPI (the API)
+#   frontend — Vite dev server serving the React app
+#
+# Why Compose?
+#   A single `docker compose up --build` spins up the whole stack with
+#   correct networking, dependency ordering, and shared env. Without it,
+#   you'd manually start a Postgres container, install Python deps,
+#   install Node deps, set ten env vars, etc.
+#
+# Each service can talk to the others by service name — Docker provides
+# DNS, so `db` resolves to the Postgres container's IP from inside the
+# backend container.
+
 services:
   db:
     image: postgres:16-alpine
     environment:
+      # ${VAR:-default} = use $VAR if set in .env, otherwise the default.
       POSTGRES_USER: ${POSTGRES_USER:-gym}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-gym}
       POSTGRES_DB: ${POSTGRES_DB:-gym}
     ports:
+      # host:container — exposes Postgres on host port 5433 so you can
+      # connect from pgAdmin/DBeaver. The container internally still uses
+      # 5432, which is what `backend` connects to over the Docker network.
       - "5433:5432"
     volumes:
+      # Named volume = data survives `docker compose down`. Use
+      # `docker compose down -v` to wipe it.
       - db_data:/var/lib/postgresql/data
     healthcheck:
+      # Compose uses this to delay starting `backend` until Postgres is
+      # ready to accept connections — no more "connection refused" races.
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-gym} -d ${POSTGRES_DB:-gym}"]
       interval: 5s
       timeout: 5s
@@ -18,6 +43,8 @@ services:
   backend:
     build: ./backend
     environment:
+      # Note: `db:5432` not `localhost:5432`. From inside this container,
+      # `db` is the hostname of the Postgres service.
       DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-gym}:${POSTGRES_PASSWORD:-gym}@db:5432/${POSTGRES_DB:-gym}
       JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
       JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-60}
@@ -26,13 +53,20 @@ services:
       - "8000:8000"
     depends_on:
       db:
+        # Wait for the healthcheck to pass, not just for the container to
+        # exist. Critical for the first boot.
         condition: service_healthy
     volumes:
+      # Bind-mount the source so edits hot-reload without rebuilding the
+      # image. In production you'd remove this and rely on the COPY in
+      # the Dockerfile.
       - ./backend:/app
 
   frontend:
     build: ./frontend
     environment:
+      # The browser hits the API directly on the host, so this must be a
+      # host-reachable URL (localhost), NOT the Docker service name.
       VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
     ports:
       - "3000:3000"
@@ -40,6 +74,9 @@ services:
       - backend
     volumes:
       - ./frontend:/app
+      # Anonymous volume to keep node_modules from being shadowed by the
+      # bind-mount above. Without this, Node would see an empty
+      # node_modules from the host.
       - /app/node_modules
 
 volumes:

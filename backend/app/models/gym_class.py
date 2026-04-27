@@ -1,3 +1,17 @@
+"""GymClass model — the ``classes`` table.
+
+A GymClass represents a recurring weekly slot (e.g. "Spin Intervals, Mondays
+at 18:30, capacity 15"). Each one can have many enrollments up to ``capacity``.
+
+Naming note: the class is called ``GymClass`` (not ``Class``) because
+``class`` is a reserved keyword in Python. The DB table is still ``classes``.
+
+Modeling limitation: this is a *template*, not an instance. There's no concept
+of "the spin class on April 27th". Per-date attendance and cancellations
+would require a separate ``ClassInstance`` model — see CONTRIBUTING.md →
+"Bigger architecture moves".
+"""
+
 import enum
 from datetime import time
 
@@ -27,8 +41,12 @@ class GymClass(Base):
     day_of_week: Mapped[DayOfWeek] = mapped_column(
         Enum(DayOfWeek, name="day_of_week"), nullable=False
     )
+    # ``Time`` (not ``DateTime``) — we only care about the wall-clock time.
+    # When you want a real calendar slot you'd switch to DateTime + timezone.
     start_time: Mapped[time] = mapped_column(Time, nullable=False)
     duration_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=60)
+    # Hard cap on how many members can enroll. The business rule
+    # "reject when full" lives in services/enrollments.py, not in the DB.
     capacity: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
 
     enrollments = relationship(

@@ -1,3 +1,14 @@
+"""Enrollment endpoints (member-only).
+
+The actual rules — "must have an active subscription, can't double-enroll,
+can't enroll in a full class, can't cancel someone else's row" — live in
+``services/enrollments.py``. This router is just plumbing: validate input
+via Pydantic, delegate to the service, return the result.
+
+That separation matters: it means the rules can be unit-tested without
+booting an HTTP server, and reused if we add another way to enroll.
+"""
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -22,6 +33,8 @@ def create_enrollment(
     db: Session = Depends(get_db),
     user: User = Depends(require_member),
 ):
+    """The user is taken from the JWT (require_member), never the body —
+    that's why ``EnrollmentCreate`` only contains ``class_id``."""
     return enroll_member(db, user, body.class_id)
 
 
@@ -31,6 +44,7 @@ def delete_enrollment(
     db: Session = Depends(get_db),
     user: User = Depends(require_member),
 ):
+    """Ownership check happens inside ``cancel_enrollment``."""
     cancel_enrollment(db, user, enrollment_id)
 
 
@@ -39,6 +53,11 @@ def my_enrollments(
     db: Session = Depends(get_db),
     user: User = Depends(require_member),
 ):
+    """The member's own upcoming classes, with the class details inlined.
+
+    We denormalize the class info into the response so the dashboard can
+    render the schedule from a single API call.
+    """
     enrollments = (
         db.query(Enrollment)
         .filter(Enrollment.user_id == user.id)
@@ -47,6 +66,8 @@ def my_enrollments(
     )
     out = []
     for e in enrollments:
+        # Same N+1 pattern as classes.py — fine for the demo, would be
+        # worth optimizing in production.
         count = (
             db.query(Enrollment).filter(Enrollment.class_id == e.class_id).count()
         )

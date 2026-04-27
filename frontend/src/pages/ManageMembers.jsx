@@ -1,3 +1,16 @@
+// ManageMembers — manager-only page that lists members with server-side
+// pagination + search.
+//
+// Patterns to notice:
+//   - All filter/page state lives in React state. The `useEffect` below
+//     re-fetches whenever any of them changes — that's enough for a small
+//     app, but TanStack Query would dedupe + cache automatically.
+//   - We track `qInput` (the text in the search box) separately from `q`
+//     (the value sent to the server) so typing doesn't fire a request on
+//     every keystroke. The user has to press Enter or click Search.
+//   - After deleting the last row on a page, we step back a page so the
+//     user doesn't see "no results" on what should be the last page.
+
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import {

@@ -1,3 +1,13 @@
+// MemberDashboard — landing page for logged-in members.
+//
+// Two responsibilities:
+//   1. Show subscription status + a "Subscribe" form when not active.
+//   2. Show the user's upcoming classes with a Cancel button each.
+//
+// Both data fetches are kicked off in parallel via Promise.all on mount.
+// In a bigger app you'd extract this fetch + cache logic into TanStack
+// Query (see CONTRIBUTING.md → "Frontend Improvements").
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api.js";
